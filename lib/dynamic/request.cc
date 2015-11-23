@@ -29,7 +29,7 @@ Request::Request() {
 Request::Request(int maxHops, std::string nodeId, std::string operatingSystem, int minCpuSpeed, int expectedCpuSpeed,
                  float minMemorySize, float expectedMemorySize, int minNetworkBandwidth, int expectedNetworkBandwidth,
                  int minDiskSpace, int expectedDiskSpace, float minPower, float expectedPower, std::string protocol,
-                 std::string encoding) {
+                 std::string encoding, std::string interestNetwork, int portToConnect) {
     init();
     _maxHops = maxHops;
     if (!nodeId.empty()) {
@@ -88,6 +88,14 @@ Request::Request(int maxHops, std::string nodeId, std::string operatingSystem, i
         _encoding = encoding;
         _hasEncodingSet = true;
     }
+    if(!interestNetwork.empty()) {
+    	_interest = interestNetwork;
+     	_hasInterestSet = true;
+    }
+    if(portToConnect >0){
+    	_connectTo = portToConnect;
+    	_hasConnectToSet = true;
+    }
 }
 
 // method initializing the request. Put the haveXXX to false and init
@@ -109,6 +117,8 @@ void Request::init() {
     _hasProtocolSet = false;
     _hasEncodingSet = false;
     _endingSignal = false;
+    _hasInterestSet = false;
+    _hastConnectToSet = false;
 }
 
 // destructor
@@ -194,7 +204,14 @@ void Request::Serialize(POPBuffer& buf, bool pack) {
         if (_hasEncodingSet) {
             buf.Pack(&_encoding, 1);
         }
-
+        buf.Pack(&_hasInterestSet, 1);
+        if(_hasInterestSet){
+        	buf.Pack(&_interest, 1);
+        }
+        buf.Pack(&_hasConnectToSet, 1);
+        if(_hasConnectToSet){
+        	buf.Pack(&_connectTo, 1);
+        }
         /**
          * ViSaG : clementval
          * Marshalling the new variables for ViSaG
@@ -270,7 +287,14 @@ void Request::Serialize(POPBuffer& buf, bool pack) {
         if (_hasEncodingSet) {
             buf.UnPack(&_encoding, 1);
         }
-
+        buf.UnPack(&_hasInterestSet, 1);
+        if(_hasInterestSet){
+        	buf.UnPack(&_interest, 1);
+        }
+        buf.UnPack(&_hasConnectToSet, 1);
+        if(_hasConnectToSet){
+        	buf.UnPack(&_connectTo, 1);
+        }
         /**
          * ViSaG : clementval
          * Unmarshalling the new variables for ViSaG
@@ -530,6 +554,28 @@ std::string Request::getEncoding() {
 // has the expected compute power set
 bool Request::hasEncodingSet() {
     return _hasEncodingSet;
+}
+
+void Request::setInterest(std::string interest) {
+ 	_hasInterestSet = true;
+ 	_interest = interest;
+ }
+std::string Request::getInterest() {
+ 	return _interest;
+ }
+bool Request::hasInterestSet() {
+ 	return _hasInterestSet;
+ }
+
+void Request::setConnectTo(int port) {
+ 	_hasConnectToSet = true;
+ 	_connectTo = port;
+}
+int Request::getConnectTo() {
+ 	return _connectTo;
+}
+bool Request::hasConnectToSet() {
+ 	return _hasConnectToSet;
 }
 
 // Set the PKI of the initiator

@@ -41,7 +41,7 @@ public:
     Request(int maxHops, std::string nodeId, std::string operatingSystem, int minCpuSpeed, int expectedCpuSpeed,
             float minMemorySize, float expectedMemorySize, int minNetworkBandwidth, int expectedNetworkBandwidth,
             int minDiskSpace, int expectedDiskSpace, float minPower, float expectedPower, std::string protocol,
-            std::string encoding);
+            std::string encoding, std::string interestNetwork, int portToConnect);
 
     // Destructor
     ~Request();
@@ -112,6 +112,13 @@ public:
     std::string getEncoding();
     bool hasEncodingSet();
 
+    void setInterest(std::string interest);
+    std::string	getInterest();
+    bool hasInterestSet();
+
+    void setConnectTo(int port);
+    int getConnectTo();
+    bool hasConnectToSet();
     /**
      * ViSaG : clementval
      */
@@ -186,7 +193,10 @@ private:
     bool _hasProtocolSet;
     std::string _encoding;
     bool _hasEncodingSet;
-
+    std::string _interest;
+    bool _hasInterestSet;
+    int _connectTo;
+    bool _hasConnectToSet;
     ExplorationList explorationList;  // exploration list of the request
 
     // initiator of the request
