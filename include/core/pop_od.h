@@ -100,7 +100,15 @@ public:
     inline void encoding(const std::string& myencode) {
         encode = myencode;
     }
+    inline void interest(const std::string& myinterest){
+    	interestnet =  myinterest;
+    }
+    inline void port(int port){
+    	remote_port = port;
+    }
 
+    void getPort(int &port) const;
+    void getInterest(paroc_string &interest) const;
     /**
      * @brief Specifies that the command to launch the object is to be printed instead, (no JobMgr used)
      * @param a on/off
@@ -161,6 +169,12 @@ public:
     inline const std::string& getEncoding() const {
         return encode;
     }
+    inline const std::string& getInterest() const{
+    	return interestnet;
+    }
+    inline const int getPort() const {
+    	return remote_port;
+    }
     bool getIsManual() const;
 #ifdef OD_DISCONNECT
     void checkConnection(int time_alive, int time_control);
@@ -211,6 +225,9 @@ protected:
     std::string hostcore; /*only for use with od.url*/
     std::string hostarch; /*only for use with od.url*/
     std::string batchSystem;
+
+    std::string interestnet;
+    int remote_port;
 
     std::string jobcontact;
     std::string codefile;

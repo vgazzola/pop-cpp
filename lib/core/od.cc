@@ -43,6 +43,8 @@ pop_od::pop_od() {
     wait_time = 0;
     node_value = -1;
     core_value = -1;
+    interestnet = 0;
+    remote_port = -1;
 }
 
 pop_od::~pop_od() {
@@ -309,7 +311,7 @@ pop_od& pop_od::operator=(const pop_od& od) {
 
 bool pop_od::IsEmpty() const {
     return (mflops < 0 && min_mflops < 0 && ram < 0 && min_ram < 0 && net < 0 && min_net < 0 && time < 0 &&
-            hostname.empty() /*&& time_alive < 0 && time_control < 0*/);
+            hostname.empty() && interestnet ==null && remote_port<0 /*&& time_alive < 0 && time_control < 0*/);
 }
 
 bool pop_od::IsLocal() const {
@@ -428,7 +430,14 @@ void pop_od::Serialize(pop_buffer& buf, bool pack) {
         buf.Push("encoding", "std::string", 1);
         buf.Pack(&t, 1);
         buf.Pop();
-
+        getInterest(t);
+        buf.Push("interest","POPString",1);
+        buf.Pack(&t,1);
+        buf.Pop();
+        getPort(*valInt);
+        buf.Push("port","int",1);
+        buf.Pack(valInt,1);
+        buf.Pop();
         // Pack additional attributes
         int count = keys.size();
         buf.Push("attributes", "vector", count);
@@ -546,6 +555,15 @@ void pop_od::Serialize(pop_buffer& buf, bool pack) {
         buf.Pop();
         encoding(t);
 
+        buf.Push("interest","POPString",1);
+        buf.UnPack(&t,1);
+        buf.Pop();
+        interest(t);
+
+        buf.Push("port","int",1);
+        buf.UnPack(valInt,1);
+        buf.Pop();
+        port(*valInt);
         // Unpack additional attributes
         int count = 0;
         buf.Push("attributes", "vector", count);
