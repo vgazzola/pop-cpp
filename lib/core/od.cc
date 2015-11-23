@@ -301,6 +301,8 @@ pop_od& pop_od::operator=(const pop_od& od) {
         codefile = od.getExecutable();
         proto = od.getProtocol();
         encode = od.getEncoding();
+        interestnet = od.getInterest();
+        remote_port = od.getPort();
 #ifdef OD_DISCONNECT
         od.getCheckConnection(time_alive, time_control);
 #endif
@@ -430,11 +432,12 @@ void pop_od::Serialize(pop_buffer& buf, bool pack) {
         buf.Push("encoding", "std::string", 1);
         buf.Pack(&t, 1);
         buf.Pop();
-        getInterest(t);
+
+        t = getInterest();
         buf.Push("interest","POPString",1);
         buf.Pack(&t,1);
         buf.Pop();
-        getPort(*valInt);
+        int valInt = getPort();
         buf.Push("port","int",1);
         buf.Pack(valInt,1);
         buf.Pop();
