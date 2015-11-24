@@ -44,8 +44,10 @@ public:
     std::string encoding;         // node's supported encoding
     std::string pki;
 
+
     std::string getPOPCSearchNodeId();
     std::string getPKI();  // Return SSH Public key
+    bool hasInterest(std::string interest);
 };
 
 /*
