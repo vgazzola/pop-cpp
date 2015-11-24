@@ -36,6 +36,8 @@
 #include "pop_timer.h"
 #include "jobmgr.ph"
 #include "pop_thread.h"
+#include "interest_network.h"
+#include "pop_buffer_raw.h"
 
 /**
  * ViSaG : clementval
@@ -247,7 +249,6 @@ JobMgr::JobMgr(bool daemon, const std::string& conf, const std::string& challeng
 
     reserve_timeout = RESERVE_TIMEOUT;
     alloc_timeout = ALLOC_TIMEOUT;
-
     // Start deamon....redirect stdin/out/err to file...
 
     //  close(0);
@@ -364,7 +365,9 @@ JobMgr::JobMgr(bool daemon, const std::string& conf, const std::string& challeng
             }
         } else if (pop_utils::isEqual(name, "platform")) {
             pop_system::platform = val;
-        } else {
+        } else if (pop_utils::isEqual(name, "interest")){
+        	_interestConfig += val;
+        }else {
             info.push_back({name, val});
         }
     }
@@ -470,6 +473,63 @@ JobMgr::JobMgr(bool daemon, const std::string& conf, const std::string& challeng
                 putenv(popc_strdup(str));
             }
         }
+    }
+
+	/* Reading configuration of interest networks */
+    if(!interestConfig.empty()){
+    	LOG_ERROR("[JM] Node interest networks file: %s", interestConfig.c_str());
+    	pugi::xml_document doc;
+    	/* Loading the configuration of the networks */
+    	pugi::xml_parse_result result = doc.load_file(interestConfig.c_str());
+    	/* If an error occurred */
+    	if (!result){
+    		LOG_ERROR("[JM] XML interest [%s] parsed with errors", interestConfig.c_str());
+    		LOG_ERROR("[JM] XML interest error description: %s", result.description());
+    		LOG_ERROR("[JM] XML interest error offset: %d", result.offset);
+    	}else{
+    		LOG_DEBUG("[JM] XML interest first id: %s", doc.child("interests").child("interest").child("id").value());
+    		pugi::xml_node rootNode = doc.child("interests");
+    		for (pugi::xml_node interestNode = rootNode.child("interest"); interestNode; interestNode = interestNode.next_sibling("interest")){
+    			POPString id = interestNode.child_value("id");
+    			POPString description = interestNode.child_value("description");
+    			POPString application = interestNode.child_value("application");
+    			float price = atof(interestNode.child_value("price"));
+    			InterestNetwork interest;
+    			interest.setId(id);
+    			interest.setDescription(description);
+    			interest.setApplication(application);
+    			interest.setLocalUnitPrice(price);
+    			LOG_DEBUG("[JM] XML interest: id=%s, description=%s, application=%s, price=%f", id.c_str(), description.c_str(), application.c_str(), price);
+    			// friends
+    			for (pugi::xml_node friendNode = interestNode.child("friend"); friendNode; friendNode = friendNode.next_sibling("friend")){
+    				POPString friendInfo = friendNode.text().get();
+    				interest.addFriend(friendInfo);
+    				LOG_DEBUG([JM] XML interest id=%s - friend: %s", id.c_str(), friendInfo.c_str());
+    			}
+    			std::list<paroc_accesspoint> l1 = interest.getFriends();
+    			LOG_DEBUG("[JM] point before add to PSN, size = %d", l1.size());
+    			for(std::list<paroc_accesspoint>::iterator i = l1.begin(); i != l1.end(); i++){
+    				LOG_DEBUG("[JM] > %s", i->GetAccessString());
+    			}
+    			psn.addInterest(interest);
+    			LOG_DEBUG("[JM] interest added, with %d friends", interest.getFriends().size());
+
+    			InterestNetwork int2;
+    			bool found = psn.getInterest(id, int2);
+    			if(found){
+    			 	std::list<paroc_accesspoint> l2 = int2.getFriends();
+    			 	LOG_DEBUG("[JM] point after add to PSN, size = %d", l2.size());
+    			 	for(std::list<paroc_accesspoint>::iterator i = l2.begin(); i != l2.end(); i++){
+    			 		LOG_DEBUG("[JM] > %s", i->GetAccessString());
+    			 	}
+    			} else {
+    			 	LOG_DEBUG("[JM] point after add ---> NOT FOUND!!!");
+    			}
+    			// psn.addInterest(interest);
+    		}
+    	}
+
+
     }
 
     if (daemon) {
@@ -728,6 +788,201 @@ int JobMgr::CreateObject(pop_accesspoint& localservice, const std::string& objna
     }
     return ret;
 }
+
+int JobMgr::FindAvailableMachines(const pop_od &od, const std::string &popAppId, POPCSearchNodeInfos &machines, std::string &reqId)
+{
+	// Added by clementval, Creation of a request to find the appropriate resources on the grid
+	// Create an interface to communicate with the local POPCSearchNode
+	POPCSearchNode psn(_localPSN);
+
+	// Create the request of resource discovery
+	Request r;
+
+	// Set the request's node identifier
+	r.setNodeId(psn.getPOPCSearchNodeId());
+
+	// Recover the od Max depth or env var POPC_SEARCHMAXHOP.
+	// If both are not set, MAXHOP constant is defined in JobMgr.ph
+	int maxhopint = 0;
+	if((maxhopint = od.getSearchMaxDepth()) > 0)
+	{
+		r.setMaxHops(maxhopint);
+	}
+	else
+	{
+		// Recover the max Hop env variable
+		char *maxhop;
+		if((maxhop = getenv("POPC_SEARCHMAXHOP")))
+		{
+			maxhopint = atoi(maxhop);
+		}
+		else
+		{
+			maxhopint = MAXHOP;
+		}
+	}
+	r.setMaxHops(maxhopint);
+
+	// Recover the maximum size of the request. This is not implemented yet
+	int maxsizeint;
+	if((maxsizeint = od.getSearchMaxReqSize()) > 0)
+	{
+		// TODO To be implemented
+	}
+
+	// Recover the od waiting time or env var POPC_SEARCHTIMEOUT.
+	// If both are not set, TIMEOUT constant is defined in JobMgr.ph
+	int timeoutint = 0;
+	if((timeoutint = od.getSearchWaitTime()) < 0)
+	{
+		//Recover the timeout in the POPC_SEARCHTIMEOUT env variable
+		char *timeout;
+		if((timeout = getenv("POPC_SEARCHTIMEOUT")))
+		{
+			timeoutint = atoi(timeout);
+		}
+		else
+		{
+			timeoutint = TIMEOUT;
+		}
+	}
+
+	// Set operating system
+	std::string r_arch;
+	od.getArch(r_arch);
+	if(r_arch != NULL)
+		r.setOperatingSystem(r_arch);
+
+	// Set min and expected mem
+	float r_minMem, r_expMem;
+	od.getMemory(r_minMem, r_expMem);
+	if(r_minMem > 0)
+		r.setMinMemorySize(r_minMem);
+	if(r_expMem > 0)
+		r.setExpectedMemorySize(r_expMem);
+
+	// Set min and expected bandwidth
+	float r_minB, r_expB;
+	od.getBandwidth(r_expB, r_minB);
+	if(r_minB > 0)
+		r.setMinNetworkBandwidth(r_minB);
+	if(r_expB > 0)
+		r.setExpectedNetworkBandwidth(r_expB);
+
+	// Set min and expected power
+	float r_minPower, r_expPower;
+	od.getPower(r_expPower, r_minPower);
+	if(r_minPower > 0)
+		r.setMinPower(r_minPower);
+	if(r_expPower > 0)
+		r.setExpectedPower(r_expPower);
+
+	// Set interest
+	POPString r_interest;
+	od.getInterest(r_interest);
+	if(r_interest != NULL)
+		r.setInterest(r_interest);
+
+	int connectTo;
+	od.getPort(connectTo);
+	if(connectTo > 0)
+	 	r.setConnectTo(connectTo);
+
+	// Set connectTo
+	int connectTo;
+	od.getPort(connectTo);
+	if(connectTo > 0)
+		r.setConnectTo(connectTo);
+
+	/*
+	 * ViSaG : clementval
+	 * Retrieve the POPAppID and set it in the request
+	 */
+	reqId = psn.getUID();
+	r.setUniqueId(reqId);
+	r.setPOPAppId(popAppId);
+
+	// Launch the discovery and recover the responses
+	POPCSearchNodeInfos responses = psn.launchDiscovery(r, timeoutint);
+	LOG_DEBUG("[JM] responses.getNodeInfos().size(): %d", responses.getNodeInfos().size());
+	machines = responses;
+	LOG_DEBUG("[JM] machines.getNodeInfos().size(): %d", machines.getNodeInfos().size());
+
+	// Check if there is any responses
+	int nb = responses.getNodeInfos().size();
+	if(nb == 0)
+	{
+		pop_exception::pop_throw("No resource found for execution");
+	}
+
+	return nb;
+}
+
+bool JobMgr::AddInterest(const std::string &id)
+{
+	InterestNetwork interest;
+	interest.setId(id);
+	POPCSearchNode psn(_localPSN);
+	psn.addInterest(interest);
+	InterestNetworkCollection col;
+	psn.getInterests(col);
+	bool saved = col.saveToConfiguration(_interestConfig.c_str());
+	if(!saved) {
+		psn.removeInterest(id);
+	}
+	return saved;
+}
+
+bool JobMgr::RemoveInterest(const std::string &id)
+{
+	POPCSearchNode psn(_localPSN);
+	InterestNetwork backup;
+	bool found = psn.getInterest(id, backup);
+	if(!found) return false;
+	psn.removeInterest(id);
+	InterestNetworkCollection col;
+	psn.getInterests(col);
+	bool saved = col.saveToConfiguration(_interestConfig.c_str());
+	if(!saved) {
+		psn.addInterest(backup);
+	}
+	return saved;
+}
+
+bool JobMgr::AddFriendToInterest(const std::string &id, const std::string &ip)
+{
+	POPCSearchNode psn(_localPSN);
+	std::string accessString = "socket://";
+	accessString += ip;
+	accessString += ":";
+	accessString += DEFAULT_PORT;
+	psn.addFriendToInterest(id, accessString);
+	InterestNetworkCollection col;
+	psn.getInterests(col);
+	bool saved = col.saveToConfiguration(_interestConfig.c_str());
+	if(!saved) {
+		psn.removeFriendFromInterest(ip, accessString);
+	}
+	return saved;
+}
+
+bool JobMgr::RemoveFriendFromInterest(const std::string &id, const std::string &ip)
+{
+	POPCSearchNode psn(_localPSN);
+	std::string accessString = "socket://";
+	accessString += ip;
+	accessString += ":";
+	accessString += DEFAULT_PORT;
+	psn.removeFriendFromInterest(id, accessString);
+	InterestNetworkCollection col;
+	psn.getInterests(col);
+	bool saved = col.saveToConfiguration(_interestConfig.c_str());
+	if(!saved) {
+		psn.addFriendToInterest(ip, accessString);
+	}
+	return saved;
+}
+
 
 bool JobMgr::AllocResource(const pop_accesspoint& localservice, const std::string& objname, const pop_od& od,
                            int howmany, float* fitness, pop_accesspoint* jobcontacts, int* reserveIDs,

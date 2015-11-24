@@ -177,7 +177,14 @@ public:
 
     sync conc virtual bool  AllocResource(const pop_accesspoint &localservice, const std::string &objname, const pop_od &od, int howmany, [in,out, size=howmany] float *fitness, [in,out, size=howmany] pop_accesspoint *jobcontacts, [in,out, size=howmany] int *reserveIDs, [in] int requestInfo[3], [in] int trace[MAX_HOPS], [in] int tracesize); //method ID 15
 
-    /**
+	sync conc virtual int FindAvailableMachines([in] const paroc_od &od, [in] const std::string &appId, [out] POPCSearchNodeInfos &responses, [out] std::string &reqId);
+ 	
+	sync seq  virtual bool AddInterest([in] const std::string &id);
+ 	sync seq  virtual bool RemoveInterest([in] const std::string &id);
+ 	sync seq  virtual bool AddFriendToInterest([in] const std::string &id, [in] const std::string& ip);
+ 	sync seq  virtual bool RemoveFriendFromInterest([in] const std::string &id, [in] const std::string& ip);
+	
+	/**
      * ViSaG : clementval
      * Reserve the resource. Add the POPAppID for the reservation
      * @param od The Object Description for the parallel object requierments
@@ -289,7 +296,7 @@ protected:
     PauseList pause_apps;
 
     bool modelearn;
-
+	std::string _interestConfig;
     /* ViSaG : clementval */
 
     pop_accesspoint _localPSN;  //reference to the local POPCSearchNode
