@@ -341,6 +341,15 @@ then
 	then
 		echo "localuser $parocuser" >>  $conf
 	fi
+	
+	echo "Enter the path to the interest networks configuration file (default: ${POPC_LOCATION}/etc/interest.xml) :"
+ 	read interest
+ 	if [ "$interest" != "" ]
+ 	then
+ 		echo "interest $interest" >>  $conf
+ 	else
+ 		echo "interest ${POPC_LOCATION}/etc/interest.xml" >>  $conf
+ 	fi
 
 else
 #
