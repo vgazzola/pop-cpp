@@ -473,7 +473,32 @@ bool POPCSearchNode::checkResource(Request req) {
         LOG_DEBUG("[PSN] FAILED FOR NBJOB");
         return false;
     }
-
+    if (req.hasInterestSet()){
+    	// TODO MOL: check du réseau d'intérêt
+    	popc_logger(DEBUG, "[PSN] checkResource: interest set");
+     	bool interestFound = false;
+     	for (std::list<InterestNetwork>::iterator i = _interests.begin(); i != _interests.end(); ++i){
+     		if (strcmp(req.getInterest().GetString(), i->getId().GetString()) == 0){
+     			interestFound = true;
+     			break;
+     		}
+     	}
+     	if (!interestFound){
+     		popc_logger(DEBUG, "[PSN] checkResource: interest not found");
+     		return false; // should never happend !
+     	}else{
+     		popc_logger(DEBUG, "[PSN] checkResource: interest found");
+     	}
+     }
+    if(req.hasConnectToSet()){
+    	int connectTo = req.getConnectTo();
+    	if(paroc_utils::IsLocalPortOpen(connectTo)){
+    		popc_logger(DEBUG, "[PSN] connectTo %d ok", connectTo);
+    	}else{
+    		popc_logger(DEBUG, "[PSN] FAILED FOR CONNECT_TO, %d", connectTo);
+    		return false;
+    	}
+    }
     // check about the operating system
     if (req.hasOperatingSystemSet()) {
         // Should be check if the current architecture is in the list of requested architecture by the request
@@ -642,4 +667,86 @@ std::string POPCSearchNode::getNeighborsAsString() {
     LOG_DEBUG("[PSN] NODENEIGH:%s", ss.str().c_str());
 
     return ss.str();
+}
+
+void POPCSearchNode::clearInterests()
+{
+	_interests.clear();
+}
+
+bool POPCSearchNode::getInterest(const std::string& id, InterestNetwork& found)
+{
+	InterestNetwork search;
+	search.setId(id);
+	for (std::list<InterestNetwork>::iterator it = _interests.begin(); it != _interests.end(); ++it)
+	{
+		if (search == *it)
+		{
+			found = *it;
+			popc_logger(DEBUG, "[PSN] getInterest *it    size=%d", it->getFriends().size());
+			popc_logger(DEBUG, "[PSN] getInterest  found size=%d", it->getFriends().size());
+			return true;
+		}
+	}
+	return false;
+}
+
+void POPCSearchNode::addInterest(const InterestNetwork& interest)
+{
+	try
+	{
+		popc_logger(DEBUG, "[PSN] addInterest: %s with %d friends", interest.getId().c_str(), interest.getFriends().size());
+		_interests.push_back(interest);
+	}
+	catch (std::exception &e)
+	{
+		popc_logger(ERROR, "[PSN] addInterest error: %s", e.what());
+	}
+}
+
+void POPCSearchNode::removeInterest(const POPString& id)
+{
+	InterestNetwork search;
+	search.setId(id);
+	_interests.remove(search); // == operator which compares the ids
+}
+
+bool POPCSearchNode::addFriendToInterest(const POPString &id, const POPString& friendContact)
+{
+	InterestNetwork search;
+	search.setId(id);
+	for(std::list<InterestNetwork>::iterator i = _interests.begin(); i != _interests.end(); i++)
+	{
+		if(search == *i)
+		{
+			i->addFriend(friendContact);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void POPCSearchNode::removeFriendFromInterest(const POPString &id, const POPString& friendContact)
+{
+	InterestNetwork search;
+	search.setId(id);
+	for(std::list<InterestNetwork>::iterator i = _interests.begin(); i != _interests.end(); i++)
+	{
+		if(search == *i)
+		{
+			i->removeFriend(friendContact);
+			return;
+		}
+	}
+}
+
+void POPCSearchNode::getInterests(InterestNetworkCollection& col)
+{
+	col.set(_interests);
+}
+
+void POPCSearchNode::setInterests(const InterestNetworkCollection& col)
+{
+	_interests = col.get();
 }
