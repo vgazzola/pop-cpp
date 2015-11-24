@@ -12,7 +12,7 @@
 #define _POP_SERVICE_BASE_PH
 
 #include "pop_accesspoint.h"
-
+#include "popc_search_node_info.h"
 typedef std::vector<pop_accesspoint> pop_accesspoint_list;
 
 /**
@@ -90,8 +90,15 @@ public:
     */
     sync conc virtual int CreateObject(pop_accesspoint &localservice, const std::string &objname, const pop_od &od, int howmany, [in, out,size=howmany] pop_accesspoint *jobcontacts, int howmany2, [in, out, size=howmany2] pop_accesspoint *remotejobcontacts)=0;
 
-    sync conc virtual pop_accesspoint getPSMRef()=0;
-
+	sync conc virtual pop_accesspoint getPSMRef()=0;
+	
+	sync conc virtual int FindAvailableMachines([in] const pop_od &od, [in] const std::string &appId, [out] POPCSearchNodeInfos &responses, [out] std::string &reqId) = 0;
+ 	sync seq  virtual bool AddInterest([in] const std::string &id) = 0;
+ 	sync seq  virtual bool RemoveInterest([in] const std::string &id) = 0;
+ 	sync seq  virtual bool AddFriendToInterest([in] const std::string &id, [in] const std::string& ip) = 0;
+ 	sync seq  virtual bool RemoveFriendFromInterest([in] const std::string &id, [in] const std::string& ip) = 0;
+ 	sync conc virtual paroc_accesspoint getPSMRef()=0;
+	
     classuid(10);
 
 
