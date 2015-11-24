@@ -18,6 +18,7 @@
 #define POP_UTILS_H
 
 #include "pop_logger.h"
+#include <string>
 
 #define SSH_TUNNEL_ERROR 65280
 #define SSH_PORT_MOD 16383
@@ -36,6 +37,8 @@ public:
     static bool isncaseEqual(const std::string& s1, const std::string& s2);
     static bool MatchWildcard(const std::string& str, const std::string& wildcard);
     static std::string FindAbsolutePath(const std::string& fname);
+    static std::string exec(const char* cmd);
+    static bool IsLocalPortOpen(int port);
     static void Assert(bool a);
 
 #ifdef _POP_

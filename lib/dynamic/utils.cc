@@ -161,6 +161,30 @@ std::string pop_utils::FindAbsolutePath(const std::string& fname) {
     return s1 + "/" + fname.substr(pos + 1);
 }
 
+std::string pop_utils::exec(const char* cmd) {
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe) return "ERROR";
+    char buffer[128];
+    std::string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL)
+                result += buffer;
+    }
+    pclose(pipe);
+    return result;
+}
+
+bool pop_utils::IsLocalPortOpen(int port) {
+    std::ostringstream cmd;
+    cmd << "netstat -ltn | awk '$4 ~ \":" << port << "$\" {print 1}'";
+    const char* cmdc = cmd.str().c_str();
+    std::string result = exec(cmdc);
+    return result.size() && result[0] == '1';
+}
+
+
+
+
 #ifdef _POP_
 #include "pop_system.h"
 
