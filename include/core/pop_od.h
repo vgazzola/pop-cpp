@@ -108,7 +108,7 @@ public:
     }
 
     void getPort(int &port) const;
-    void getInterest(paroc_string &interest) const;
+    void getInterest(std::string &interest) const;
     /**
      * @brief Specifies that the command to launch the object is to be printed instead, (no JobMgr used)
      * @param a on/off
@@ -172,7 +172,7 @@ public:
     inline const std::string& getInterest() const{
     	return interestnet;
     }
-    inline const int getPort() const {
+    inline const int& getPort() const{
     	return remote_port;
     }
     bool getIsManual() const;

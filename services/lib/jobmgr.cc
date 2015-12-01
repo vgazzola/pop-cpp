@@ -476,71 +476,27 @@ JobMgr::JobMgr(bool daemon, const std::string& conf, const std::string& challeng
     }
 
 	/* Reading configuration of interest networks */
-    if(!interestConfig.empty()){
-    	LOG_ERROR("[JM] Node interest networks file: %s", interestConfig.c_str());
-    	pugi::xml_document doc;
-    	/* Loading the configuration of the networks */
-    	pugi::xml_parse_result result = doc.load_file(interestConfig.c_str());
-    	/* If an error occurred */
-    	if (!result){
-    		LOG_ERROR("[JM] XML interest [%s] parsed with errors", interestConfig.c_str());
-    		LOG_ERROR("[JM] XML interest error description: %s", result.description());
-    		LOG_ERROR("[JM] XML interest error offset: %d", result.offset);
-    	}else{
-    		LOG_DEBUG("[JM] XML interest first id: %s", doc.child("interests").child("interest").child("id").value());
-    		pugi::xml_node rootNode = doc.child("interests");
-    		for (pugi::xml_node interestNode = rootNode.child("interest"); interestNode; interestNode = interestNode.next_sibling("interest")){
-    			POPString id = interestNode.child_value("id");
-    			POPString description = interestNode.child_value("description");
-    			POPString application = interestNode.child_value("application");
-    			float price = atof(interestNode.child_value("price"));
-    			InterestNetwork interest;
-    			interest.setId(id);
-    			interest.setDescription(description);
-    			interest.setApplication(application);
-    			interest.setLocalUnitPrice(price);
-    			LOG_DEBUG("[JM] XML interest: id=%s, description=%s, application=%s, price=%f", id.c_str(), description.c_str(), application.c_str(), price);
-    			// friends
-    			for (pugi::xml_node friendNode = interestNode.child("friend"); friendNode; friendNode = friendNode.next_sibling("friend")){
-    				POPString friendInfo = friendNode.text().get();
-    				interest.addFriend(friendInfo);
-    				LOG_DEBUG([JM] XML interest id=%s - friend: %s", id.c_str(), friendInfo.c_str());
-    			}
-    			std::list<paroc_accesspoint> l1 = interest.getFriends();
-    			LOG_DEBUG("[JM] point before add to PSN, size = %d", l1.size());
-    			for(std::list<paroc_accesspoint>::iterator i = l1.begin(); i != l1.end(); i++){
-    				LOG_DEBUG("[JM] > %s", i->GetAccessString());
-    			}
-    			psn.addInterest(interest);
-    			LOG_DEBUG("[JM] interest added, with %d friends", interest.getFriends().size());
+    if(!_interestConfig.empty())
+	{
+		InterestNetworkCollection interestsCol;
+		bool loaded = interestsCol.loadFromConfiguration(_interestConfig.c_str());
+		if(loaded) {
+			LOG_DEBUG("[JM] interests loaded");
+			psn.getInterests(interestsCol);
+		} else {
+			LOG_DEBUG("[JM] error while loading interests");
+		}
+	}
 
-    			InterestNetwork int2;
-    			bool found = psn.getInterest(id, int2);
-    			if(found){
-    			 	std::list<paroc_accesspoint> l2 = int2.getFriends();
-    			 	LOG_DEBUG("[JM] point after add to PSN, size = %d", l2.size());
-    			 	for(std::list<paroc_accesspoint>::iterator i = l2.begin(); i != l2.end(); i++){
-    			 		LOG_DEBUG("[JM] > %s", i->GetAccessString());
-    			 	}
-    			} else {
-    			 	LOG_DEBUG("[JM] point after add ---> NOT FOUND!!!");
-    			}
-    			// psn.addInterest(interest);
-    		}
-    	}
+	if (daemon) Start();
 
-
-    }
-
-    if (daemon) {
-        Start();
-    }
-
-    if (parent_timeout > 0 || service_timeout > 0) {
-        paroc_timerthread* timeinfo = new paroc_timerthread(parent_timeout, service_timeout, this);
-        timeinfo->create();
-    }
+	if (parent_timeout>0 || service_timeout>0)
+	{
+		paroc_timerthread *timeinfo=new paroc_timerthread(parent_timeout,service_timeout, this);
+		timeinfo->create();
+	}
 }
+
 
 JobMgr::~JobMgr() {
     // Added by clementval
@@ -849,8 +805,8 @@ int JobMgr::FindAvailableMachines(const pop_od &od, const std::string &popAppId,
 
 	// Set operating system
 	std::string r_arch;
-	od.getArch(r_arch);
-	if(r_arch != NULL)
+	r_arch = od.getArch();
+	if(!r_arch.empty())
 		r.setOperatingSystem(r_arch);
 
 	// Set min and expected mem
@@ -879,18 +835,13 @@ int JobMgr::FindAvailableMachines(const pop_od &od, const std::string &popAppId,
 
 	// Set interest
 	POPString r_interest;
-	od.getInterest(r_interest);
-	if(r_interest != NULL)
+	r_interest = od.getInterest();
+	if(!r_interest.empty())
 		r.setInterest(r_interest);
-
-	int connectTo;
-	od.getPort(connectTo);
-	if(connectTo > 0)
-	 	r.setConnectTo(connectTo);
 
 	// Set connectTo
 	int connectTo;
-	od.getPort(connectTo);
+	connectTo = od.getPort();
 	if(connectTo > 0)
 		r.setConnectTo(connectTo);
 

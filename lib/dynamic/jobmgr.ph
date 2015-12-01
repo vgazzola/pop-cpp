@@ -177,7 +177,7 @@ public:
 
     sync conc virtual bool  AllocResource(const pop_accesspoint &localservice, const std::string &objname, const pop_od &od, int howmany, [in,out, size=howmany] float *fitness, [in,out, size=howmany] pop_accesspoint *jobcontacts, [in,out, size=howmany] int *reserveIDs, [in] int requestInfo[3], [in] int trace[MAX_HOPS], [in] int tracesize); //method ID 15
 
-	sync conc virtual int FindAvailableMachines([in] const paroc_od &od, [in] const std::string &appId, [out] POPCSearchNodeInfos &responses, [out] std::string &reqId);
+	sync conc virtual int FindAvailableMachines([in] const pop_od &od, [in] const std::string &appId, [out] POPCSearchNodeInfos &responses, [out] std::string &reqId);
  	
 	sync seq  virtual bool AddInterest([in] const std::string &id);
  	sync seq  virtual bool RemoveInterest([in] const std::string &id);

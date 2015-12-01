@@ -39,7 +39,8 @@
 #include "pop_timer.h"
 #include "pop_thread.h"
 #include "pop_logger.h"
-#include "pop_service_base.ph"
+#include "service_base.ph"
+#include "interest_network.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -88,9 +89,9 @@ public :
 	mutex sync bool getInterest([in] const std::string& id, [out] InterestNetwork& found);
 	mutex sync void clearInterests();
 	mutex sync void addInterest([in] const InterestNetwork& interest);
-	mutex sync void removeInterest([in] const td::string& id);
-	mutex sync bool addFriendToInterest([in] const td::string &id, [in] const td::string& friendContact);
-	mutex sync void removeFriendFromInterest([in] const td::string &id, [in] const td::string& friendContact);
+	mutex sync void removeInterest([in] const std::string& id);
+	mutex sync bool addFriendToInterest([in] const std::string &id, [in] const std::string& friendContact);
+	mutex sync void removeFriendFromInterest([in] const std::string &id, [in] const std::string& friendContact);
 	mutex sync void getInterests([out] InterestNetworkCollection& col);
 	mutex sync void setInterests([in] const InterestNetworkCollection& col);
 
@@ -143,7 +144,7 @@ protected:
     std::map<std::string, POPCSearchNodeInfos> actualReq;     // own actual requests
     POPSynchronizer actualReqSyn;            // sync. for actual req.
 
-	list<InterestNetwork> _interests;
+	std::list<InterestNetwork> _interests;
     // internal method returning a list of neighbors
     conc sync std::list<std::string> getNeighbors();
     int psn_currentJobs;

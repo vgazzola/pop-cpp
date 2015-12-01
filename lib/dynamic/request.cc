@@ -118,7 +118,7 @@ void Request::init() {
     _hasEncodingSet = false;
     _endingSignal = false;
     _hasInterestSet = false;
-    _hastConnectToSet = false;
+    _hasConnectToSet = false;
 }
 
 // destructor

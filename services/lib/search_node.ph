@@ -39,7 +39,7 @@
 #include "pop_timer.h"
 #include "pop_thread.h"
 #include "pop_logger.h"
-
+#include "interest_network.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -84,6 +84,15 @@ public :
     conc sync int getMaxJobs();
 
     sync seq std::string getUID();
+    
+    mutex sync bool getInterest([in] const std::string& id, [out] InterestNetwork& found);
+	mutex sync void clearInterests();
+	mutex sync void addInterest([in] const InterestNetwork& interest);
+	mutex sync void removeInterest([in] const std::string& id);
+	mutex sync bool addFriendToInterest([in] const std::string &id, [in] const std::string& friendContact);
+	mutex sync void removeFriendFromInterest([in] const std::string &id, [in] const std::string& friendContact);
+	mutex sync void getInterests([out] InterestNetworkCollection& col);
+	mutex sync void setInterests([in] const InterestNetworkCollection& col);
 
     // Method allowing adding Neighbor to the node
     seq sync void addNeighbor(POPCSearchNode &node);

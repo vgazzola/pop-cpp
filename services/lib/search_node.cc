@@ -475,27 +475,27 @@ bool POPCSearchNode::checkResource(Request req) {
     }
     if (req.hasInterestSet()){
     	// TODO MOL: check du réseau d'intérêt
-    	popc_logger(DEBUG, "[PSN] checkResource: interest set");
+    	LOG_DEBUG("[PSN] checkResource: interest set");
      	bool interestFound = false;
      	for (std::list<InterestNetwork>::iterator i = _interests.begin(); i != _interests.end(); ++i){
-     		if (strcmp(req.getInterest().GetString(), i->getId().GetString()) == 0){
+     		if (req.getInterest().compare(i->getId()) == 0){
      			interestFound = true;
      			break;
      		}
      	}
      	if (!interestFound){
-     		popc_logger(DEBUG, "[PSN] checkResource: interest not found");
+     		LOG_DEBUG("[PSN] checkResource: interest not found");
      		return false; // should never happend !
      	}else{
-     		popc_logger(DEBUG, "[PSN] checkResource: interest found");
+     		LOG_DEBUG("[PSN] checkResource: interest found");
      	}
      }
     if(req.hasConnectToSet()){
     	int connectTo = req.getConnectTo();
-    	if(paroc_utils::IsLocalPortOpen(connectTo)){
-    		popc_logger(DEBUG, "[PSN] connectTo %d ok", connectTo);
+    	if(pop_utils::IsLocalPortOpen(connectTo)){
+    		LOG_DEBUG("[PSN] connectTo %d ok", connectTo);
     	}else{
-    		popc_logger(DEBUG, "[PSN] FAILED FOR CONNECT_TO, %d", connectTo);
+    		LOG_DEBUG("[PSN] FAILED FOR CONNECT_TO, %d", connectTo);
     		return false;
     	}
     }
