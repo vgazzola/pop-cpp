@@ -81,12 +81,12 @@ class InterestNetwork : public POPBase
 		/**
 		 * @brief Change the id
 		 */
-		void setId(const POPString &id);
+		void setId(const std::string &id);
 
 		/**
 		 * @brief Get the id of this network
 		 */
-		POPString getId() const;
+		std::string getId() const;
 
 		/**
 		 * @brief Add the reference to a friend

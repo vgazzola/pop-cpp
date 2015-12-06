@@ -68,11 +68,13 @@ add_library(popc_core
     combox_factory.cc
     event.cc
     exception.cc
+    interest_network.cc
     memspool.cc
     mutex.cc
     od.cc
     logger.cpp
     popwayback.cc
+    pugixml.cc
     thread.cc
     timer.cc
     ${intface_cc_file}

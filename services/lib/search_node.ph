@@ -142,7 +142,9 @@ protected:
     std::list<std::string> knownRequests;          // already-asked requests
     std::map<std::string, POPCSearchNodeInfos> actualReq;     // own actual requests
     POPSynchronizer actualReqSyn;            // sync. for actual req.
-
+	
+	std::list<InterestNetwork> _interests;
+		
     // internal method returning a list of neighbors
     conc sync std::list<std::string> getNeighbors();
     int psn_currentJobs;

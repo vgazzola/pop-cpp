@@ -683,8 +683,8 @@ bool POPCSearchNode::getInterest(const std::string& id, InterestNetwork& found)
 		if (search == *it)
 		{
 			found = *it;
-			popc_logger(DEBUG, "[PSN] getInterest *it    size=%d", it->getFriends().size());
-			popc_logger(DEBUG, "[PSN] getInterest  found size=%d", it->getFriends().size());
+			LOG_DEBUG("[PSN] getInterest *it    size=%d", it->getFriends().size());
+			LOG_DEBUG("[PSN] getInterest  found size=%d", it->getFriends().size());
 			return true;
 		}
 	}
@@ -695,12 +695,12 @@ void POPCSearchNode::addInterest(const InterestNetwork& interest)
 {
 	try
 	{
-		popc_logger(DEBUG, "[PSN] addInterest: %s with %d friends", interest.getId().c_str(), interest.getFriends().size());
+		LOG_DEBUG("[PSN] addInterest: %s with %d friends", interest.getId().c_str(), interest.getFriends().size());
 		_interests.push_back(interest);
 	}
 	catch (std::exception &e)
 	{
-		popc_logger(ERROR, "[PSN] addInterest error: %s", e.what());
+		LOG_ERROR("[PSN] addInterest error: %s", e.what());
 	}
 }
 

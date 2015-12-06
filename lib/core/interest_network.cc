@@ -1,6 +1,6 @@
 
 #include "interest_network.h"
-#include "popc_logger.h"
+#include "pop_logger.h"
 #include "pugixml.h"
 
 InterestNetwork::InterestNetwork()
@@ -19,7 +19,7 @@ InterestNetwork::~InterestNetwork()
 
 bool InterestNetwork::operator ==(const InterestNetwork& p) const
 {
-	return strcmp((const char*) _id, (const char*) p._id) == 0;
+	return ( _id.compare( p._id)) == 0;
 }
 
 InterestNetwork& InterestNetwork::operator =(const InterestNetwork& p)
@@ -98,7 +98,7 @@ void InterestNetwork::addFriend(const pop_accesspoint &friendAccessPoint)
 
 void InterestNetwork::removeFriend(const std::string &friendContact)
 {
-	paroc_accesspoint ap;
+	pop_accesspoint ap;
 	ap.SetAccessString(friendContact);
 	removeFriend(ap);
 }
@@ -207,7 +207,7 @@ bool InterestNetworkCollection::saveToConfiguration(const char* file)
 		std::list<pop_accesspoint> friends = i->getFriends();
 		for(std::list<pop_accesspoint>::iterator f = friends.begin(); f != friends.end(); f++)
 		{
-			interestNode.append_child("friend").append_child(pugi::node_pcdata).set_value(f->GetAccessString());
+			interestNode.append_child("friend").append_child(pugi::node_pcdata).set_value((f->GetAccessString()).c_str());
 		}
 	}
 	return doc.save_file(file);
