@@ -877,6 +877,7 @@ bool JobMgr::AddInterest(const std::string &id)
 	psn.addInterest(interest);
 	InterestNetworkCollection col;
 	psn.getInterests(col);
+	LOG_DEBUG("[jobmgr.addinterest] %s",_interestConfig.c_str());
 	bool saved = col.saveToConfiguration(_interestConfig.c_str());
 	if(!saved) {
 		psn.removeInterest(id);
