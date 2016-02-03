@@ -618,6 +618,9 @@ int JobMgr::Query(const std::string& type, std::string& val) {
 
 int JobMgr::CreateObject(pop_accesspoint& localservice, const std::string& objname, const pop_od& od, int howmany,
                          pop_accesspoint* objcontacts, int howmany2, pop_accesspoint* remotejobcontacts) {
+
+	LOG_DEBUG("[JM] CreateObject %d %s %d", howmany, objname.c_str(), howmany2);
+
     if (howmany <= 0) {
         return 0;
     }
@@ -725,7 +728,7 @@ int JobMgr::CreateObject(pop_accesspoint& localservice, const std::string& objna
         ret = POP_JOBSERVICE_FAIL;
     }
 
-    LOG_INFO("Object count=%d, require=%d\n", count, howmany);
+    LOG_ERROR("Object count=%d, require=%d\n", count, howmany);
     if (count >= howmany) {
         return 0;
     }
@@ -742,6 +745,9 @@ int JobMgr::CreateObject(pop_accesspoint& localservice, const std::string& objna
     if (ret == 0) {
         ret = POP_EXEC_FAIL;
     }
+
+	LOG_DEBUG("[JM] CreateObject end");
+
     return ret;
 }
 
