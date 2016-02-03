@@ -358,6 +358,9 @@ else
 	echo "np 1" >>  $conf
 	echo "maxjobs 100" >>  $conf
 	echo "ram 1024" >>  $conf
+	echo "interest $POPC_LOCATION/etc/interest.xml" >>  $conf
+	echo "<interests> </interests>">> $POPC_LOCATION/etc/interest.xml 
+	chmod 666 $POPC_LOCATION/etc/interest.xml
 fi
 
 
